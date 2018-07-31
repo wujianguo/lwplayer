@@ -75,6 +75,14 @@ int open_video_track(AVFormatContext *ifmt_ctx, unsigned int stream_index, Video
     uint8_t *buffer = NULL;
     numBytes = av_image_get_buffer_size(AV_PIX_FMT_YUV420P, codec_ctx->width, codec_ctx->height, 1);
     buffer = (uint8_t *)av_malloc(numBytes * sizeof(uint8_t));
+    
+    init_track(&track_ptr->track, codec_ctx);
+    for (int i=0; i<track_ptr->track.frame_max_size; ++i) {
+        track_ptr->track.frames[i] = av_frame_alloc();
+        av_image_fill_arrays(track_ptr->track.frames[i]->data, track_ptr->track.frames[i]->linesize, buffer, AV_PIX_FMT_YUV420P, codec_ctx->width, codec_ctx->height, 1);
+    }
+
+
     track_ptr->sws_ctx = sws_getContext(codec_ctx->width,
                                         codec_ctx->height,
                                         codec_ctx->pix_fmt,
@@ -87,7 +95,6 @@ int open_video_track(AVFormatContext *ifmt_ctx, unsigned int stream_index, Video
                                         NULL
                                         );
     
-    init_track(&track_ptr->track, buffer, codec_ctx);
     track_ptr->track.codec_context = codec_ctx;
     track_ptr->track.stream_index = stream_index;
 

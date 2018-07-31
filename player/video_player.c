@@ -12,6 +12,7 @@
 #include <libavutil/time.h>
 #include <libswscale/swscale.h>
 
+
 VideoDisplayContext *video_display_alloc_context(SDL_Window *screen, AVCodecContext *codec_ctx) {
     VideoDisplayContext *context = av_malloc(sizeof(VideoDisplayContext));
     context->codec_ctx = codec_ctx;

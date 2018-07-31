@@ -19,7 +19,7 @@
 typedef struct MediaAssetTrack {
     unsigned int        stream_index;
     AVCodecContext      *codec_context;
-    
+
     AVPacket            packets[MAX_PACKET_NUM];
     unsigned int        packet_index;
     unsigned int        packet_size;
@@ -37,20 +37,20 @@ typedef struct MediaAssetTrack {
 typedef struct VideoAssetTrack {
     
     MediaAssetTrack     track;
-    
     struct SwsContext   *sws_ctx;
-//    AVFrame             *frame;
+
 } VideoAssetTrack;
 
 
 typedef struct AudioAssetTrack {
 
     MediaAssetTrack     track;
-
+    struct SwrContext  *swr_ctx;
+    
 } AudioAssetTrack;
 
 
-void init_track(MediaAssetTrack *track, uint8_t *buffer, AVCodecContext *codec_ctx);
+void init_track(MediaAssetTrack *track, AVCodecContext *codec_ctx);
 
 //int packet_queue_init(MediaAssetTrack *track);
 
@@ -66,6 +66,8 @@ int packet_queue_full(MediaAssetTrack *track);
 int frame_queue_init(MediaAssetTrack *track, uint8_t *buffer, AVCodecContext *codec_ctx);
 
 int frame_queue_put_video(struct SwsContext *sws_ctx, MediaAssetTrack *track, AVFrame *frame);
+
+int frame_queue_put_audio(struct SwrContext *swr_ctx, MediaAssetTrack *track, AVFrame *frame);
 
 int frame_queue_get(MediaAssetTrack *track, AVFrame **frame);
 

@@ -16,6 +16,7 @@ int main(int argc, const char * argv[]) {
     }
     
     const char* in_filename = argv[1];
+//    const char* in_filename = "http://devimages.apple.com.edgekey.net/streaming/examples/bipbop_4x3/bipbop_4x3_variant.m3u8";
     printf("%s\n", in_filename);
     
     int ret = 0;
@@ -27,3 +28,9 @@ int main(int argc, const char * argv[]) {
     event_loop_run(asset);
     return 0;
 }
+
+
+
+
+
+

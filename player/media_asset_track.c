@@ -11,9 +11,8 @@
 #include <libswscale/swscale.h>
 #include <assert.h>
 
-void init_track(MediaAssetTrack *track, uint8_t *buffer, AVCodecContext *codec_ctx) {
+void init_track(MediaAssetTrack *track, AVCodecContext *codec_ctx) {
     memset(track, 0, sizeof(MediaAssetTrack));
-    int i = 0;
     
     track->packet_max_size = MAX_PACKET_NUM;
     track->packet_index = 0;
@@ -23,12 +22,7 @@ void init_track(MediaAssetTrack *track, uint8_t *buffer, AVCodecContext *codec_c
     track->frame_max_size = MAX_FRAME_NUM;
     track->frame_index = 0;
     track->frame_size = 0;
-    track->frame_mutex = SDL_CreateMutex();
-    
-    for (i=0; i<track->frame_max_size; ++i) {
-        track->frames[i] = av_frame_alloc();
-        av_image_fill_arrays(track->frames[i]->data, track->frames[i]->linesize, buffer, AV_PIX_FMT_YUV420P, codec_ctx->width, codec_ctx->height, 1);
-    }
+    track->frame_mutex = SDL_CreateMutex();    
 }
 
 int packet_queue_put(MediaAssetTrack *track, AVPacket *packet) {
@@ -41,7 +35,7 @@ int packet_queue_put(MediaAssetTrack *track, AVPacket *packet) {
     unsigned int index = (track->packet_index + track->packet_size) % track->packet_max_size;
     av_packet_move_ref(&track->packets[index], packet);
     track->packet_size += 1;
-//    av_log(NULL, AV_LOG_ERROR, "packet_queue_put packet index: %d, size: %d\n", track->packet_index, track->packet_size);
+    av_log(NULL, AV_LOG_ERROR, "packet_queue_put packet index: %d, size: %d\n", track->packet_index, track->packet_size);
     SDL_UnlockMutex(track->packet_mutex);
     return 0;
 }
@@ -55,7 +49,7 @@ int packet_queue_get(MediaAssetTrack *track, AVPacket **packet) {
     assert(track->packet_size > 0);
     *packet = &track->packets[track->packet_index];
 
-//    av_log(NULL, AV_LOG_ERROR, "packet_queue_get packet index: %d, size: %d\n", track->packet_index, track->packet_size);
+    av_log(NULL, AV_LOG_ERROR, "packet_queue_get packet index: %d, size: %d\n", track->packet_index, track->packet_size);
     SDL_UnlockMutex(track->packet_mutex);
     return 0;
 }
@@ -89,8 +83,30 @@ int frame_queue_put_video(struct SwsContext *sws_ctx, MediaAssetTrack *track, AV
               frame->linesize, 0, track->codec_context->height,
               frame_out->data, frame_out->linesize);
     track->frame_size += 1;
-//    av_log(NULL, AV_LOG_ERROR, "frame_queue_put  frame index: %d, size: %d\n", track->frame_index, track->frame_size);
+    av_log(NULL, AV_LOG_ERROR, "frame_queue_put_video  frame index: %d, size: %d\n", track->frame_index, track->frame_size);
 
+    SDL_UnlockMutex(track->frame_mutex);
+    return 0;
+}
+
+int frame_queue_put_audio(struct SwrContext *swr_ctx, MediaAssetTrack *track, AVFrame *frame) {
+    SDL_LockMutex(track->frame_mutex);
+    if (track->frame_size == track->frame_max_size) {
+        SDL_UnlockMutex(track->frame_mutex);
+        return AVERROR(EAGAIN);
+    }
+    assert(track->frame_size < track->frame_max_size);
+    unsigned int index = (track->frame_index + track->frame_size) % track->frame_max_size;
+    AVFrame *frame_out = track->frames[index];
+    
+//    swr_convert(swr_ctx, &out_buffer, MAX_AUDIO_FRAME_SIZE,(const uint8_t **)pFrame->data , pFrame->nb_samples);
+
+//    sws_scale(sws_ctx, (uint8_t const *const *)frame->data,
+//              frame->linesize, 0, track->codec_context->height,
+//              frame_out->data, frame_out->linesize);
+    track->frame_size += 1;
+    av_log(NULL, AV_LOG_ERROR, "frame_queue_put_audio  frame index: %d, size: %d\n", track->frame_index, track->frame_size);
+    
     SDL_UnlockMutex(track->frame_mutex);
     return 0;
 }
@@ -103,7 +119,7 @@ int frame_queue_get(MediaAssetTrack *track, AVFrame **frame) {
     }
     assert(track->frame_size > 0);
     *frame = track->frames[track->frame_index];
-//    av_log(NULL, AV_LOG_ERROR, "frame_queue_get  frame index: %d, size: %d\n", track->frame_index, track->frame_size);
+    av_log(NULL, AV_LOG_ERROR, "frame_queue_get  frame index: %d, size: %d\n", track->frame_index, track->frame_size);
 
     SDL_UnlockMutex(track->frame_mutex);
     return 0;

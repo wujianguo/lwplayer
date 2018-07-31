@@ -31,17 +31,14 @@ int reader_thread(void *data) {
             while ((ret = packet_queue_put(&asset->video->track, &packet)) == AVERROR(EAGAIN)) {
                 av_usleep(50);
             }
-
-//        } else if (packet.stream_index == asset->audio->track.stream_index) {
-//            packet_queue_put(&asset->audio->track, &packet);
+        } else if (packet.stream_index == asset->audio->track.stream_index) {
+//            while ((ret = packet_queue_put(&asset->audio->track, &packet)) == AVERROR(EAGAIN)) {
+//                av_usleep(50);
+//            }
         }
 
-        while (packet_queue_full(&asset->video->track)) {
+        while (packet_queue_full(&asset->video->track) || packet_queue_full(&asset->audio->track)) {
             av_usleep(50);
-
-//            SDL_LockMutex(wait_mutex);
-//            SDL_CondWait(asset->read_cond, wait_mutex);
-//            SDL_UnlockMutex(wait_mutex);
         }
 
     }

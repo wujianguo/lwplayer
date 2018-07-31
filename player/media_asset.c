@@ -11,7 +11,8 @@
 #include "audio_decoder.h"
 
 int open_asset(const char *url, MediaAsset **asset) {
-    av_register_all();
+//    av_register_all();
+    avformat_network_init();
     int ret = 0;
     AVFormatContext *ifmt_ctx = NULL;
     ret = avformat_open_input(&ifmt_ctx, url, 0, 0);
@@ -36,7 +37,7 @@ int open_asset(const char *url, MediaAsset **asset) {
         if (ifmt_ctx->streams[stream_index]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
             open_video_track(ifmt_ctx, stream_index, &asset_ptr->video);
         } else if (ifmt_ctx->streams[stream_index]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
-
+            open_audio_track(ifmt_ctx, stream_index, &asset_ptr->audio);
         }
     }
 

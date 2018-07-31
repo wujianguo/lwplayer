@@ -9,6 +9,8 @@
 #ifndef audio_player_h
 #define audio_player_h
 
-int start_audio_player();
+#include <SDL2/SDL.h>
+
+void audio_callback(void *data, Uint8 *stream, int len);
 
 #endif /* audio_player_h */
